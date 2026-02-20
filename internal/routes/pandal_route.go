@@ -7,7 +7,7 @@ import (
 )
 
 // PandalRoute defines endpoints for the app
-func PandalRoute(router *gin.Engine, handler *handlers.PandalHandler) {
+func PandalRoute(router *gin.RouterGroup, handler *handlers.PandalHandler) {
 	router.POST("/pandal", handler.CreatePandal())
 	router.GET("/pandals", handler.GetAllPandals())
 	router.GET("/pandals/pending", handler.GetPendingPandals())

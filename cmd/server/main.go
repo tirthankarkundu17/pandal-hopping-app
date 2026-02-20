@@ -34,8 +34,9 @@ func main() {
 		log.Println("MongoDB disconnected.")
 	}()
 
-	// Setup MongoDB Collection
+	// Setup MongoDB Collections
 	pandalCollection := config.GetCollection(client, "durgapuja")
+	userCollection := config.GetCollection(client, "users")
 
 	// Run Database Migrations
 	migrations.RunMigrations(pandalCollection)
@@ -45,11 +46,19 @@ func main() {
 	pandalService := services.NewPandalService(pandalRepo)
 	pandalHandler := handlers.NewPandalHandler(pandalService)
 
+	userRepo := repository.NewUserRepository(userCollection)
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+
 	// Setup Gin router
 	router := gin.Default()
 
+	// API Route Group
+	apiGroup := router.Group("/api/v1")
+
 	// Setup routes
-	routes.PandalRoute(router, pandalHandler)
+	routes.PandalRoute(apiGroup, pandalHandler)
+	routes.AuthRoute(apiGroup, authHandler)
 
 	// Default response
 	router.GET("/", func(c *gin.Context) {

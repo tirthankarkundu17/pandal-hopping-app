@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"tirthankarkundu17/pandal-hopping-api/internal/models"
@@ -13,6 +14,8 @@ import (
 type PandalRepository interface {
 	Create(ctx context.Context, pandal models.Pandal) (*mongo.InsertOneResult, error)
 	FindAll(ctx context.Context, filter bson.M) ([]models.Pandal, error)
+	FindByID(ctx context.Context, id primitive.ObjectID) (*models.Pandal, error)
+	Update(ctx context.Context, id primitive.ObjectID, update bson.M) (*mongo.UpdateResult, error)
 }
 
 // pandalRepository implements the PandalRepository interface
@@ -64,4 +67,19 @@ func (r *pandalRepository) FindAll(ctx context.Context, filter bson.M) ([]models
 	}
 
 	return pandals, nil
+}
+
+// FindByID retrieves a pandal by its ID
+func (r *pandalRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*models.Pandal, error) {
+	var pandal models.Pandal
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&pandal)
+	if err != nil {
+		return nil, err
+	}
+	return &pandal, nil
+}
+
+// Update amends a pandal document by its ID
+func (r *pandalRepository) Update(ctx context.Context, id primitive.ObjectID, update bson.M) (*mongo.UpdateResult, error) {
+	return r.collection.UpdateOne(ctx, bson.M{"_id": id}, update)
 }

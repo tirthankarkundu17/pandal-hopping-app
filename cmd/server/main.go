@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,9 +19,17 @@ import (
 	"tirthankarkundu17/pandal-hopping-api/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 )
 
-func main() {
+func main1() {
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading environment variables: %v", err)
+	}
+
 	// Connect to the Database
 	client := config.ConnectDB()
 
@@ -32,10 +41,13 @@ func main() {
 			log.Fatalf("Error disconnecting from MongoDB: %v", err)
 		}
 		log.Println("MongoDB disconnected.")
+
+		connectPostgres()
 	}()
 
-	// Setup MongoDB Collection
+	// Setup MongoDB Collections
 	pandalCollection := config.GetCollection(client, "durgapuja")
+	userCollection := config.GetCollection(client, "users")
 
 	// Run Database Migrations
 	migrations.RunMigrations(pandalCollection)
@@ -45,11 +57,19 @@ func main() {
 	pandalService := services.NewPandalService(pandalRepo)
 	pandalHandler := handlers.NewPandalHandler(pandalService)
 
+	userRepo := repository.NewUserRepository(userCollection)
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+
 	// Setup Gin router
 	router := gin.Default()
 
+	// API Route Group
+	apiGroup := router.Group("/api/v1")
+
 	// Setup routes
-	routes.PandalRoute(router, pandalHandler)
+	routes.PandalRoute(apiGroup, pandalHandler)
+	routes.AuthRoute(apiGroup, authHandler)
 
 	// Default response
 	router.GET("/", func(c *gin.Context) {
@@ -104,4 +124,25 @@ func main() {
 	}
 
 	log.Println("Server exiting")
+}
+
+func connectPostgres() {
+
+	ctx := context.Background()
+	databaseURL := os.Getenv("DATABASE_URL")
+	fmt.Println(databaseURL)
+
+	conn, err := pgx.Connect(ctx, databaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close(ctx)
+
+	var greeting string
+	err = conn.QueryRow(ctx, "select 'Connected to Supabase!'").Scan(&greeting)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(greeting)
 }

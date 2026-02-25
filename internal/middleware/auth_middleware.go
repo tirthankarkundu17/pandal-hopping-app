@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -29,7 +30,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := parts[1]
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
-			secret = "supersecretkey"
+			log.Fatal("JWT_SECRET environment variable not set")
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

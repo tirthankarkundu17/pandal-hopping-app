@@ -1,0 +1,53 @@
+import { api } from './client';
+
+export interface Location {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+}
+
+export interface Pandal {
+  id: string;
+  name: string;
+  description: string;
+  area: string;
+  theme: string;
+  location: Location;
+  images: string[];
+  ratingAvg: number;
+  ratingCount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  approvalCount: number;
+  approvedBy: string[];
+  createdAt: string;
+}
+
+export interface CreatePandalInput {
+  name: string;
+  area: string;
+  description?: string;
+  theme?: string;
+  location: Location;
+  images?: string[];
+}
+
+export const pandalApi = {
+  listApproved: async (): Promise<Pandal[]> => {
+    const res = await api.get<Pandal[]>('/pandals/');
+    return res.data;
+  },
+
+  listPending: async (): Promise<Pandal[]> => {
+    const res = await api.get<Pandal[]>('/pandals/pending');
+    return res.data;
+  },
+
+  createPandal: async (data: CreatePandalInput): Promise<Pandal> => {
+    const res = await api.post<Pandal>('/pandals/', data);
+    return res.data;
+  },
+
+  approvePandal: async (id: string): Promise<Pandal> => {
+    const res = await api.put<Pandal>(`/pandals/${id}/approve`);
+    return res.data;
+  },
+};

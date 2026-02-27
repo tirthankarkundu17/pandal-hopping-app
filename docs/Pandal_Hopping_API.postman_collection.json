@@ -364,13 +364,25 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/locations/administrative",
+							"raw": "{{base_url}}/locations/administrative?country=IN&state=WB",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"locations",
 								"administrative"
+							],
+							"query": [
+								{
+									"key": "country",
+									"value": "IN",
+									"disabled": true
+								},
+								{
+									"key": "state",
+									"value": "WB",
+									"disabled": true
+								}
 							]
 						}
 					}

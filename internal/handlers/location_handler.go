@@ -18,9 +18,13 @@ func NewLocationHandler() *LocationHandler {
 
 // GetAdministrativeData returns the static geographical hierarchical data
 // GET /locations/administrative
+// Supports optional query params: country, state
 func (h *LocationHandler) GetAdministrativeData() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		data := validation.GetAdministrativeData()
+		countryCode := c.Query("country")
+		stateCode := c.Query("state")
+
+		data := validation.GetAdministrativeData(countryCode, stateCode)
 		c.JSON(http.StatusOK, gin.H{"data": data})
 	}
 }

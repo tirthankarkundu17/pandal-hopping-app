@@ -6,25 +6,31 @@ import (
 	"os"
 )
 
+type AdminDistrict struct {
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	IsActive bool   `json:"is_active"`
+}
+
+type AdminState struct {
+	Code      string          `json:"code"`
+	Name      string          `json:"name"`
+	Type      string          `json:"type"`
+	IsoCode   string          `json:"iso_code"`
+	IsActive  bool            `json:"is_active"`
+	Districts []AdminDistrict `json:"districts"`
+}
+
+type AdminCountry struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 type AdministrativeData struct {
-	Version     string `json:"version"`
-	LastUpdated string `json:"last_updated"`
-	Country     struct {
-		Code string `json:"code"`
-		Name string `json:"name"`
-	} `json:"country"`
-	States []struct {
-		Code      string `json:"code"`
-		Name      string `json:"name"`
-		Type      string `json:"type"`
-		IsoCode   string `json:"iso_code"`
-		IsActive  bool   `json:"is_active"`
-		Districts []struct {
-			Code     string `json:"code"`
-			Name     string `json:"name"`
-			IsActive bool   `json:"is_active"`
-		} `json:"districts"`
-	} `json:"states"`
+	Version     string       `json:"version"`
+	LastUpdated string       `json:"last_updated"`
+	Country     AdminCountry `json:"country"`
+	States      []AdminState `json:"states"`
 }
 
 var adminData AdministrativeData
@@ -44,9 +50,28 @@ func LoadAdministrativeData(filepath string) error {
 	return nil
 }
 
-// GetAdministrativeData returns the loaded administrative data for API responses.
-func GetAdministrativeData() AdministrativeData {
-	return adminData
+// GetAdministrativeData returns the loaded administrative data with optional filtering.
+func GetAdministrativeData(countryCode, stateCode string) AdministrativeData {
+	result := adminData
+
+	// Filter by country code
+	if countryCode != "" && result.Country.Code != countryCode {
+		result.States = []AdminState{}
+		return result
+	}
+
+	// Filter by state code
+	if stateCode != "" {
+		var filtered []AdminState
+		for _, state := range result.States {
+			if state.Code == stateCode {
+				filtered = append(filtered, state)
+			}
+		}
+		result.States = filtered
+	}
+
+	return result
 }
 
 // ValidateLocation checks if a given country, state, and district code exists

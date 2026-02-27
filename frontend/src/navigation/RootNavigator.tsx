@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import { LoadingOverlay } from '../components/common';
@@ -14,15 +14,33 @@ import { LoginScreen, RegisterScreen } from '../screens/AuthScreens';
 
 // App screens
 import { HomeScreen } from '../screens/HomeScreen';
-import { PendingScreen } from '../screens/PendingScreen';
-import { CreatePandalScreen } from '../screens/CreatePandalScreen';
-import { PandalDetailScreen } from '../screens/PandalDetailScreen';
+import { MapScreen } from '../screens/MapScreen';
+import { FoodScreen } from '../screens/FoodScreen';
+import { RouteScreen } from '../screens/RouteScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+
+// Sub-screens (stay in Home stack)
+import { PandalDetailScreen } from '../screens/PandalDetailScreen';
+import { CreatePandalScreen } from '../screens/CreatePandalScreen';
 
 const AuthStack = createNativeStackNavigator();
 const MainTab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
-const PendingStack = createNativeStackNavigator();
+
+// Tab configuration: name → icon mapping
+type TabConfig = {
+    name: string;
+    icon: string;         // Ionicons name (unfocused)
+    iconFocused: string;  // Ionicons name (focused)
+};
+
+const TAB_CONFIGS: TabConfig[] = [
+    { name: 'Home', icon: 'home-outline', iconFocused: 'home' },
+    { name: 'Map', icon: 'map-outline', iconFocused: 'map' },
+    { name: 'Food', icon: 'restaurant-outline', iconFocused: 'restaurant' },
+    { name: 'Route', icon: 'navigate-outline', iconFocused: 'navigate' },
+    { name: 'Profile', icon: 'person-outline', iconFocused: 'person' },
+];
 
 function HomeStackNavigator() {
     return (
@@ -34,46 +52,45 @@ function HomeStackNavigator() {
     );
 }
 
-function PendingStackNavigator() {
-    return (
-        <PendingStack.Navigator screenOptions={{ headerShown: false }}>
-            <PendingStack.Screen name="PendingList" component={PendingScreen} />
-            <PendingStack.Screen name="PandalDetail" component={PandalDetailScreen} />
-        </PendingStack.Navigator>
-    );
-}
-
 function MainTabs() {
     return (
         <MainTab.Navigator
-            screenOptions={({ route }) => ({
-                headerShown: false,
-                tabBarStyle: styles.tabBar,
-                tabBarActiveTintColor: COLORS.tabActive,
-                tabBarInactiveTintColor: COLORS.tabInactive,
-                tabBarLabelStyle: styles.tabLabel,
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName: string;
-                    if (route.name === 'Pandals') {
-                        iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Pending') {
-                        iconName = focused ? 'time' : 'time-outline';
-                    } else {
-                        iconName = focused ? 'person' : 'person-outline';
-                    }
-                    return <Ionicons name={iconName as any} size={22} color={color} />;
-                },
-            })}
+            screenOptions={({ route }) => {
+                const config = TAB_CONFIGS.find(t => t.name === route.name);
+                return {
+                    headerShown: false,
+                    tabBarStyle: styles.tabBar,
+                    tabBarActiveTintColor: COLORS.tabActive,
+                    tabBarInactiveTintColor: COLORS.tabInactive,
+                    tabBarLabelStyle: styles.tabLabel,
+                    tabBarIcon: ({ focused, color, size }) => {
+                        const iconName = focused
+                            ? (config?.iconFocused ?? 'home')
+                            : (config?.icon ?? 'home-outline');
+                        return <Ionicons name={iconName as any} size={22} color={color} />;
+                    },
+                };
+            }}
         >
             <MainTab.Screen
-                name="Pandals"
+                name="Home"
                 component={HomeStackNavigator}
-                options={{ tabBarLabel: 'Pandals' }}
+                options={{ tabBarLabel: 'Home' }}
             />
             <MainTab.Screen
-                name="Pending"
-                component={PendingStackNavigator}
-                options={{ tabBarLabel: 'Pending' }}
+                name="Map"
+                component={MapScreen}
+                options={{ tabBarLabel: 'Map' }}
+            />
+            <MainTab.Screen
+                name="Food"
+                component={FoodScreen}
+                options={{ tabBarLabel: 'Food' }}
+            />
+            <MainTab.Screen
+                name="Route"
+                component={RouteScreen}
+                options={{ tabBarLabel: 'Route' }}
             />
             <MainTab.Screen
                 name="Profile"

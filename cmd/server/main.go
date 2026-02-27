@@ -16,6 +16,7 @@ import (
 	"tirthankarkundu17/pandal-hopping-api/internal/repository"
 	"tirthankarkundu17/pandal-hopping-api/internal/routes"
 	"tirthankarkundu17/pandal-hopping-api/internal/services"
+	"tirthankarkundu17/pandal-hopping-api/internal/validation"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -23,8 +24,14 @@ import (
 )
 
 func main() {
+	// Load administrative geographic data into memory
+	err := validation.LoadAdministrativeData("internal/data/india-administrative.json")
+	if err != nil {
+		log.Fatalf("Fatal: could not initialize geographical validation data: %v", err)
+	}
+
 	// Load environment variables
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
 		log.Printf("Error loading environment variables: %v", err)
 	}

@@ -1,0 +1,45 @@
+{
+  "version": "2026.01",
+  "last_updated": "2026-01-15",
+  "country": {
+    "code": "IN",
+    "name": "India"
+  },
+  "states": [
+    {
+      "code": "WB",
+      "name": "West Bengal",
+      "type": "STATE",
+      "iso_code": "IN-WB",
+      "census_code": "19",
+      "is_active": true,
+      "districts": [
+        { "code": "ALP", "name": "Alipurduar", "is_active": true },
+        { "code": "BNK", "name": "Bankura", "is_active": true },
+        { "code": "BIR", "name": "Birbhum", "is_active": true },
+        { "code": "COB", "name": "Cooch Behar", "is_active": true },
+        { "code": "DDN", "name": "Dakshin Dinajpur", "is_active": true },
+        { "code": "DAR", "name": "Darjeeling", "is_active": true },
+        { "code": "HGL", "name": "Hooghly", "is_active": true },
+        { "code": "HWH", "name": "Howrah", "is_active": true },
+        { "code": "JAL", "name": "Jalpaiguri", "is_active": true },
+        { "code": "JHA", "name": "Jhargram", "is_active": true },
+        { "code": "KAL", "name": "Kalimpong", "is_active": true },
+        { "code": "KOL", "name": "Kolkata", "is_active": true },
+        { "code": "MLD", "name": "Malda", "is_active": true },
+        { "code": "MUR", "name": "Murshidabad", "is_active": true },
+        { "code": "NAD", "name": "Nadia", "is_active": true },
+        { "code": "PNB", "name": "North 24 Parganas", "is_active": true },
+        { "code": "PSM", "name": "Paschim Medinipur", "is_active": true },
+        { "code": "PRB", "name": "Purba Bardhaman", "is_active": true },
+        { "code": "PRM", "name": "Purba Medinipur", "is_active": true },
+        { "code": "PRL", "name": "Purulia", "is_active": true },
+        { "code": "RNB", "name": "Ranaghat", "is_active": true },
+        { "code": "SLG", "name": "Siliguri", "is_active": true },
+        { "code": "S24", "name": "South 24 Parganas", "is_active": true },
+        { "code": "UBD", "name": "Uttar Dinajpur", "is_active": true },
+        { "code": "WBD", "name": "West Bardhaman", "is_active": true }
+      ]
+    }
+  ]
+}

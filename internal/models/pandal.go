@@ -27,7 +27,9 @@ type Pandal struct {
 	Name          string             `json:"name" bson:"name" binding:"required"`
 	Description   string             `json:"description" bson:"description"`
 	Area          string             `json:"area" bson:"area" binding:"required"`
-	District      string             `json:"district" bson:"district"`
+	District      string             `json:"district" bson:"district" binding:"required"`
+	State         string             `json:"state" bson:"state" binding:"required"`
+	Country       string             `json:"country" bson:"country" binding:"required"`
 	Theme         string             `json:"theme" bson:"theme"`
 	Tags          []string           `json:"tags" bson:"tags"` // e.g. ["award-winning", "banedi-bari"]
 	Location      Location           `json:"location" bson:"location"`

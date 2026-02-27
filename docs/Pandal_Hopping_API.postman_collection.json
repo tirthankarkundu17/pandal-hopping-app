@@ -77,7 +77,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Dummy Pandal\",\n    \"description\": \"A beautiful pandal\",\n    \"area\": \"North Kolkata\",\n    \"district\": \"Kolkata\",\n    \"theme\": \"Nature\",\n    \"tags\": [\"award-winning\", \"theme\"],\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [88.3639, 22.5726]\n    }\n}"
+							"raw": "{\n    \"name\": \"Dummy Pandal\",\n    \"description\": \"A beautiful pandal\",\n    \"area\": \"Salt Lake\",\n    \"district\": \"PNB\",\n    \"state\": \"WB\",\n    \"country\": \"IN\",\n    \"theme\": \"Nature\",\n    \"tags\": [\"award-winning\", \"theme\"],\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [88.3639, 22.5726]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/pandals/",

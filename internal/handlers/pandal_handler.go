@@ -11,6 +11,7 @@ import (
 
 	"tirthankarkundu17/pandal-hopping-api/internal/models"
 	"tirthankarkundu17/pandal-hopping-api/internal/services"
+	"tirthankarkundu17/pandal-hopping-api/internal/validation"
 )
 
 // PandalHandler handles all HTTP requests for pandals
@@ -34,6 +35,12 @@ func (h *PandalHandler) CreatePandal() gin.HandlerFunc {
 		var pandal models.Pandal
 
 		if err := c.ShouldBindJSON(&pandal); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Validate geographic location details from JSON data
+		if err := validation.ValidateLocation(pandal.Country, pandal.State, pandal.District); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

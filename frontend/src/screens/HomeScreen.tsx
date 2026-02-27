@@ -35,14 +35,7 @@ const HIGHLIGHTS = [
 
 
 
-// ─── Image Fallbacks ──────────────────────────────────────────────────────────
 
-const DISTRICT_IMAGES: Record<string, string> = {
-    'Kolkata': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcF5ZAaQk9F1cLA_0c4LXC0GxI1cqD2u8V4A&s',
-    'Howrah': 'https://media.istockphoto.com/id/1164386039/photo/howrah-bridge-on-river-ganges-at-kolkata-at-twilight-with-moody-sky.jpg?s=612x612&w=0&k=20&c=CHrNWdInFSDyERdvgd0f8935hZcBQU6lbYCE4LlXqUY=',
-    '24 Parganas (N)': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOOXsExbdexjHIkg-RjtM3gYsEiR0ranQQyA&s',
-};
-const DEFAULT_DISTRICT_IMAGE = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcF5ZAaQk9F1cLA_0c4LXC0GxI1cqD2u8V4A&s';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -111,7 +104,7 @@ const DistrictMosaic = ({ data }: { data: District[] }) => {
         return {
             ...d,
             landmark: `${d.pandalCount || 0} Pandals`,
-            image: DISTRICT_IMAGES[d.name] || DEFAULT_DISTRICT_IMAGE,
+            image: d.image || 'https://placehold.co/600x400/1E0A3C/FFFFFF?text=' + encodeURIComponent(d.name),
         };
     });
 

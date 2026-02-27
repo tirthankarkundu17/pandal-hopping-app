@@ -100,15 +100,18 @@ export const MOCK_DISTRICTS: District[] = [
         id: '1',
         name: 'Kolkata',
         pandalCount: 450,
+        image: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Kolkata_maidan.jpg'
     },
     {
         id: '2',
         name: 'Howrah',
         pandalCount: 120,
+        image: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Belur_Math_-_Ramakrishna_Math_and_around%2C_Howrah%2C_Kolkata-_IRCTC_2017_%2820%29.jpg'
     },
     {
         id: '3',
         name: '24 Parganas (N)',
         pandalCount: 300,
+        image: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Mangal_Pandey_Park%2C_Barrackpore.jpg'
     },
 ];

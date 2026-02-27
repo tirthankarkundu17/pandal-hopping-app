@@ -11,6 +11,7 @@ import (
 
 	"tirthankarkundu17/pandal-hopping-api/internal/models"
 	"tirthankarkundu17/pandal-hopping-api/internal/services"
+	"tirthankarkundu17/pandal-hopping-api/internal/validation"
 )
 
 // PandalHandler handles all HTTP requests for pandals
@@ -38,6 +39,15 @@ func (h *PandalHandler) CreatePandal() gin.HandlerFunc {
 			return
 		}
 
+		// Validate geographic location details from JSON data
+		if err := validation.ValidateLocation(pandal.Country, pandal.State, pandal.District); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Inject the authenticated user as the creator
+		pandal.CreatedBy = c.GetString("userID")
+
 		result, err := h.service.CreatePandal(ctx, pandal)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting data: " + err.Error()})
@@ -49,6 +59,7 @@ func (h *PandalHandler) CreatePandal() gin.HandlerFunc {
 }
 
 // GetAllPandals handles geospatial mapping search of pandals
+// Supports optional query params: lng, lat, radius, tag, q
 func (h *PandalHandler) GetAllPandals() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -57,6 +68,8 @@ func (h *PandalHandler) GetAllPandals() gin.HandlerFunc {
 		lngStr := c.Query("lng")
 		latStr := c.Query("lat")
 		radiusStr := c.Query("radius")
+		tag := c.Query("tag")
+		search := c.Query("q")
 
 		var hasCoords bool
 		var lng, lat, radius float64
@@ -84,13 +97,29 @@ func (h *PandalHandler) GetAllPandals() gin.HandlerFunc {
 			return
 		}
 
-		pandals, err := h.service.GetPandals(ctx, lng, lat, radius, hasCoords)
+		pandals, err := h.service.GetPandals(ctx, lng, lat, radius, hasCoords, tag, search)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{"data": pandals})
+	}
+}
+
+// GetDistricts returns approved pandals grouped by district
+// GET /pandals/districts
+func (h *PandalHandler) GetDistricts() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+
+		districts, err := h.service.GetDistricts(ctx)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": districts})
 	}
 }
 
@@ -129,7 +158,9 @@ func (h *PandalHandler) GetPendingPandals() gin.HandlerFunc {
 			return
 		}
 
-		pandals, err := h.service.GetPendingPandals(ctx, lng, lat, radius, hasCoords)
+		userID := c.GetString("userID")
+
+		pandals, err := h.service.GetPendingPandals(ctx, lng, lat, radius, hasCoords, userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

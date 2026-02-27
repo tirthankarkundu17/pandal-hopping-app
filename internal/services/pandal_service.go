@@ -13,6 +13,7 @@ import (
 
 	"tirthankarkundu17/pandal-hopping-api/internal/models"
 	"tirthankarkundu17/pandal-hopping-api/internal/repository"
+	"tirthankarkundu17/pandal-hopping-api/internal/validation"
 )
 
 // PandalService defines the business logic interface
@@ -20,7 +21,7 @@ type PandalService interface {
 	CreatePandal(ctx context.Context, pandal models.Pandal) (*mongo.InsertOneResult, error)
 	GetPandals(ctx context.Context, lng, lat, radius float64, hasCoords bool, tag, search, district string) ([]models.Pandal, error)
 	GetPendingPandals(ctx context.Context, lng, lat, radius float64, hasCoords bool, excludeUserID string) ([]models.Pandal, error)
-	GetDistricts(ctx context.Context) ([]models.District, error)
+	GetDistricts(ctx context.Context, country, state string) ([]models.District, error)
 	ApprovePandal(ctx context.Context, id primitive.ObjectID, approverID string) (*models.Pandal, error)
 }
 
@@ -117,8 +118,19 @@ func (s *pandalService) GetPendingPandals(ctx context.Context, lng, lat, radius 
 }
 
 // GetDistricts aggregates approved pandals grouped by district
-func (s *pandalService) GetDistricts(ctx context.Context) ([]models.District, error) {
-	return s.repo.AggregateDistricts(ctx)
+func (s *pandalService) GetDistricts(ctx context.Context, country, state string) ([]models.District, error) {
+	districts, err := s.repo.AggregateDistricts(ctx, country, state)
+	if err != nil {
+		return nil, err
+	}
+
+	// Resolve human-readable district names from their codes
+	for i := range districts {
+		name := validation.GetDistrictName(country, state, districts[i].ID)
+		districts[i].Name = name
+	}
+
+	return districts, nil
 }
 
 // ApprovePandal increments the approval count and updates status to approved if consensus is met

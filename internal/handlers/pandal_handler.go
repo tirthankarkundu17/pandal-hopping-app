@@ -115,7 +115,10 @@ func (h *PandalHandler) GetDistricts() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 		defer cancel()
 
-		districts, err := h.service.GetDistricts(ctx)
+		country := c.Query("country")
+		state := c.Query("state")
+
+		districts, err := h.service.GetDistricts(ctx, country, state)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

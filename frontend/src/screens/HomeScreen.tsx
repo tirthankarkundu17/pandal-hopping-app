@@ -24,11 +24,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // To be updated with API calls later
 const HIGHLIGHTS = [
     { id: '1', label: 'Award-Winning', icon: 'trophy-outline', lib: 'ion', grad: ['#F97316', '#EA580C'] as [string, string] },
-    { id: '2', label: 'Banedi Bari', icon: 'home-city-outline', lib: 'mci', grad: ['#8B5CF6', '#6D28D9'] as [string, string] },
-    { id: '3', label: 'Theme Pujas', icon: 'color-palette-outline', lib: 'ion', grad: ['#EC4899', '#BE185D'] as [string, string] },
-    { id: '4', label: 'Baroari Pujas', icon: 'people-outline', lib: 'ion', grad: ['#14B8A6', '#0F766E'] as [string, string] },
-    { id: '5', label: 'North Kolkata', icon: 'location-outline', lib: 'ion', grad: ['#3B82F6', '#1D4ED8'] as [string, string] },
-    { id: '6', label: 'South Kolkata', icon: 'location-outline', lib: 'ion', grad: ['#F59E0B', '#D97706'] as [string, string] },
+    { id: '2', label: 'Theme Pujas', icon: 'color-palette-outline', lib: 'ion', grad: ['#EC4899', '#BE185D'] as [string, string] },
+    { id: '3', label: 'North Kolkata', icon: 'location-outline', lib: 'ion', grad: ['#3B82F6', '#1D4ED8'] as [string, string] },
+    { id: '4', label: 'South Kolkata', icon: 'location-outline', lib: 'ion', grad: ['#F59E0B', '#D97706'] as [string, string] },
 ];
 
 // To be updated with API calls later

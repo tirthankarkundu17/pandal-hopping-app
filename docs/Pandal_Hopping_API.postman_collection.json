@@ -1,0 +1,401 @@
+{
+	"info": {
+		"name": "Pandal Hopping API",
+		"description": "Postman Collection for the Pandal Hopping Go backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "pandals",
+			"item": [
+				{
+					"name": "Create Pandal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Dummy Pandal\",\n    \"description\": \"A beautiful pandal\",\n    \"area\": \"North Kolkata\",\n    \"district\": \"Kolkata\",\n    \"theme\": \"Nature\",\n    \"tags\": [\"award-winning\", \"theme\"],\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [88.3639, 22.5726]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pandals/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pandals",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Pandals (Approved)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pandals/?lng=88.36&lat=22.57&radius=5000&tag=award-winning&q=north",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pandals",
+								""
+							],
+							"query": [
+								{
+									"key": "lng",
+									"value": "88.36",
+									"description": "Longitude for geospatial query",
+									"disabled": true
+								},
+								{
+									"key": "lat",
+									"value": "22.57",
+									"description": "Latitude for geospatial query",
+									"disabled": true
+								},
+								{
+									"key": "radius",
+									"value": "5000",
+									"description": "Radius in meters",
+									"disabled": true
+								},
+								{
+									"key": "tag",
+									"value": "award-winning",
+									"disabled": true
+								},
+								{
+									"key": "q",
+									"value": "north",
+									"description": "Text search query",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Pending Pandals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pandals/pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pandals",
+								"pending"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Districts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pandals/districts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pandals",
+								"districts"
+							]
+						}
+					}
+				},
+				{
+					"name": "Approve Pandal",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pandals/{{pandal_id}}/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pandals",
+								"{{pandal_id}}",
+								"approve"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "routes",
+			"item": [
+				{
+					"name": "Create Route",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Lights of the City of Joy\",\n    \"description\": \"Chase the glow of Kolkata's most dazzling pandals\",\n    \"duration\": \"~4-5 Hours\",\n    \"stops\": []\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/routes/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"routes",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Routes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/routes/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"routes",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Route By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/routes/{{route_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"routes",
+								"{{route_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "food",
+			"item": [
+				{
+					"name": "Create Food Stop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"The Gazeboo\",\n    \"type\": \"Restaurant\",\n    \"area\": \"South Kolkata\",\n    \"district\": \"Kolkata\",\n    \"image\": \"https://example.com/image.jpg\",\n    \"location\": {\n        \"type\": \"Point\",\n        \"coordinates\": [88.36, 22.57]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/food/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"food",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Food Stops",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/food/?lng={{lng}}&lat={{lat}}&radius={{radius}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"food",
+								""
+							],
+							"query": [
+								{
+									"key": "lng",
+									"value": "{{lng}}",
+									"disabled": true
+								},
+								{
+									"key": "lat",
+									"value": "{{lat}}",
+									"disabled": true
+								},
+								{
+									"key": "radius",
+									"value": "{{radius}}",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Food Stop By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/food/{{food_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"food",
+								"{{food_id}}"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "pandal_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "route_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "food_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

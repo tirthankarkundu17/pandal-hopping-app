@@ -44,6 +44,11 @@ func LoadAdministrativeData(filepath string) error {
 	return nil
 }
 
+// GetAdministrativeData returns the loaded administrative data for API responses.
+func GetAdministrativeData() AdministrativeData {
+	return adminData
+}
+
 // ValidateLocation checks if a given country, state, and district code exists
 // in the loaded administrative data and returns an error if not found.
 func ValidateLocation(countryCode, stateCode, districtCode string) error {

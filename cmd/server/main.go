@@ -75,6 +75,8 @@ func main() {
 	foodStopService := services.NewFoodStopService(foodStopRepo)
 	foodStopHandler := handlers.NewFoodStopHandler(foodStopService)
 
+	locationHandler := handlers.NewLocationHandler()
+
 	// Setup Gin router
 	router := gin.Default()
 
@@ -96,6 +98,7 @@ func main() {
 	routes.AuthRoute(apiGroup, authHandler)
 	routes.RouteRoute(apiGroup, routeHandler)
 	routes.FoodRoute(apiGroup, foodStopHandler)
+	routes.LocationRoute(apiGroup, locationHandler)
 
 	// Default response
 	router.GET("/", func(c *gin.Context) {

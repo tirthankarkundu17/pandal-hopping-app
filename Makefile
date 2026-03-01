@@ -45,7 +45,7 @@ CONTAINER     ?= pandal-api
 HOST_PORT     ?= 8080
 
 # Path to a local .env file used when running the container
-ENV_FILE      ?= .env
+ENV_FILE      ?= backend/.env
 
 # ─── Phony targets ────────────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ build: setup-buildx ## Build multi-arch image and push to Docker Hub
 		--label "org.opencontainers.image.revision=$(COMMIT)" \
 		--label "org.opencontainers.image.source=https://github.com/$(DOCKER_USER)/$(IMAGE_NAME)" \
 		--push \
-		.
+		backend
 	@echo "==> Successfully pushed $(IMAGE):$(VERSION) and $(IMAGE):latest"
 
 build-local: ## Build image for the current host platform only (no push)
@@ -90,7 +90,7 @@ build-local: ## Build image for the current host platform only (no push)
 		--label "org.opencontainers.image.title=$(IMAGE_NAME)" \
 		--label "org.opencontainers.image.version=$(VERSION)" \
 		--label "org.opencontainers.image.revision=$(COMMIT)" \
-		.
+		backend
 	@echo "==> Image $(IMAGE):$(VERSION) is ready locally"
 
 # ─── Push ─────────────────────────────────────────────────────────────────────
@@ -135,10 +135,10 @@ tag-version: ## Tag current local image with VERSION and push
 # ─── Dev helpers ──────────────────────────────────────────────────────────────
 
 lint: ## Run golangci-lint (must be installed)
-	golangci-lint run ./...
+	cd backend && golangci-lint run ./...
 
 test: ## Run the Go test suite
-	go test -v -race ./...
+	cd backend && go test -v -race ./...
 
 # ─── Cleanup ──────────────────────────────────────────────────────────────────
 

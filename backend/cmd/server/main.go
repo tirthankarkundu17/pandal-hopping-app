@@ -25,7 +25,7 @@ import (
 
 func main() {
 	// Load administrative geographic data into memory
-	err := validation.LoadAdministrativeData("internal/data/india-administrative.json")
+	err := validation.LoadAdministrativeData()
 	if err != nil {
 		log.Fatalf("Fatal: could not initialize geographical validation data: %v", err)
 	}

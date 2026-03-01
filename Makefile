@@ -17,7 +17,7 @@
 
 # Docker Hub user and image name.
 # Override on the command line:  make build DOCKER_USER=myuser
-DOCKER_USER   ?= tirthankark
+DOCKER_USER   ?= your-dockerhub-username
 IMAGE_NAME    ?= pandal-hopping-api
 REGISTRY      ?= docker.io
 
@@ -45,7 +45,7 @@ CONTAINER     ?= pandal-api
 HOST_PORT     ?= 8080
 
 # Path to a local .env file used when running the container
-ENV_FILE      ?= .env
+ENV_FILE      ?= backend/.env
 
 # ─── Phony targets ────────────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ build: setup-buildx ## Build multi-arch image and push to Docker Hub
 		--label "org.opencontainers.image.revision=$(COMMIT)" \
 		--label "org.opencontainers.image.source=https://github.com/$(DOCKER_USER)/$(IMAGE_NAME)" \
 		--push \
-		.
+		backend
 	@echo "==> Successfully pushed $(IMAGE):$(VERSION) and $(IMAGE):latest"
 
 build-local: ## Build image for the current host platform only (no push)
@@ -90,7 +90,7 @@ build-local: ## Build image for the current host platform only (no push)
 		--label "org.opencontainers.image.title=$(IMAGE_NAME)" \
 		--label "org.opencontainers.image.version=$(VERSION)" \
 		--label "org.opencontainers.image.revision=$(COMMIT)" \
-		.
+		backend
 	@echo "==> Image $(IMAGE):$(VERSION) is ready locally"
 
 # ─── Push ─────────────────────────────────────────────────────────────────────
@@ -103,16 +103,9 @@ push: ## Push existing local tags to Docker Hub
 
 # ─── Run locally ──────────────────────────────────────────────────────────────
 
-run: ## Run the container locally (reads .env for secrets)
-	@echo "==> Starting container '$(CONTAINER)' on port $(HOST_PORT)"
-	docker run -d \
-		--name $(CONTAINER) \
-		--env-file $(ENV_FILE) \
-		-e HOST=0.0.0.0 \
-		-p $(HOST_PORT):8080 \
-		--restart unless-stopped \
-		$(IMAGE):latest
-	@echo "==> Container started. API available at http://localhost:$(HOST_PORT)"
+run: ## Run the backend server locally
+	@echo "==> Starting local backend server"
+	cd backend && go run ./cmd/server
 
 stop: ## Stop and remove the local container
 	@echo "==> Stopping and removing container '$(CONTAINER)'"
@@ -135,10 +128,10 @@ tag-version: ## Tag current local image with VERSION and push
 # ─── Dev helpers ──────────────────────────────────────────────────────────────
 
 lint: ## Run golangci-lint (must be installed)
-	golangci-lint run ./...
+	cd backend && golangci-lint run ./...
 
 test: ## Run the Go test suite
-	go test -v -race ./...
+	cd backend && go test -v -race ./...
 
 # ─── Cleanup ──────────────────────────────────────────────────────────────────
 

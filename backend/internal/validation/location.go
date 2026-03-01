@@ -3,7 +3,8 @@ package validation
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	
+	"tirthankarkundu17/pandal-hopping-api/internal/data"
 )
 
 type AdminDistrict struct {
@@ -36,15 +37,10 @@ type AdministrativeData struct {
 
 var adminData AdministrativeData
 
-// LoadAdministrativeData loads the data from the given filepath
+// LoadAdministrativeData loads the data from the embedded file
 // This should be called once on app startup.
-func LoadAdministrativeData(filepath string) error {
-	fileBytes, err := os.ReadFile(filepath)
-	if err != nil {
-		return fmt.Errorf("could not read administrative data file: %w", err)
-	}
-
-	if err := json.Unmarshal(fileBytes, &adminData); err != nil {
+func LoadAdministrativeData() error {
+	if err := json.Unmarshal(data.IndiaAdministrativeJSON, &adminData); err != nil {
 		return fmt.Errorf("could not unmarshal administrative data: %w", err)
 	}
 

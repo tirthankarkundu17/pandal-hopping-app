@@ -57,36 +57,38 @@ A RESTful backend API for a **Durga Puja Pandal Hopping** application — helpin
 ## 📁 Project Structure
 
 ```
-pandal-hopping-api/
-├── cmd/
-│   └── server/
-│       └── main.go            # Entry point — wires up DB, DI, router, graceful shutdown
-├── internal/
-│   ├── config/
-│   │   └── db.go              # MongoDB connection & collection helpers
-│   ├── handlers/
-│   │   ├── auth_handler.go    # Register, Login, Refresh handlers
-│   │   └── pandal_handler.go  # Create, List, Approve pandal handlers
-│   ├── middleware/
-│   │   └── auth_middleware.go # JWT Bearer token validation middleware
-│   ├── migrations/
-│   │   └── migration.go       # Startup index creation (2dsphere, area)
-│   ├── models/
-│   │   ├── pandal.go          # Pandal & Location structs + status constants
-│   │   └── user.go            # User, Auth request/response structs
-│   ├── repository/
-│   │   ├── pandal_repository.go
-│   │   └── user_repository.go
-│   ├── routes/
-│   │   ├── auth_route.go      # /api/v1/auth routes
-│   │   └── pandal_route.go    # /api/v1/pandals routes (auth-protected)
-│   └── services/
-│       ├── auth_service.go    # Auth business logic
-│       └── pandal_service.go  # Pandal business logic
-├── .env.example               # Template for required environment variables
-├── Dockerfile                 # Multi-stage build → scratch final image
-├── Makefile                   # Docker build, push, run, lint, test targets
-└── go.mod / go.sum
+pandal-hopping-app/
+├── backend/
+│   ├── cmd/
+│   │   └── server/
+│   │       └── main.go            # Entry point — wires up DB, DI, router, graceful shutdown
+│   ├── internal/
+│   │   ├── config/
+│   │   │   └── db.go              # MongoDB connection & collection helpers
+│   │   ├── handlers/
+│   │   │   ├── auth_handler.go    # Register, Login, Refresh handlers
+│   │   │   └── pandal_handler.go  # Create, List, Approve pandal handlers
+│   │   ├── middleware/
+│   │   │   └── auth_middleware.go # JWT Bearer token validation middleware
+│   │   ├── migrations/
+│   │   │   └── migration.go       # Startup index creation (2dsphere, area)
+│   │   ├── models/
+│   │   │   ├── pandal.go          # Pandal & Location structs + status constants
+│   │   │   └── user.go            # User, Auth request/response structs
+│   │   ├── repository/
+│   │   │   ├── pandal_repository.go
+│   │   │   └── user_repository.go
+│   │   ├── routes/
+│   │   │   ├── auth_route.go      # /api/v1/auth routes
+│   │   │   └── pandal_route.go    # /api/v1/pandals routes (auth-protected)
+│   │   └── services/
+│   │       ├── auth_service.go    # Auth business logic
+│   │       └── pandal_service.go  # Pandal business logic
+│   ├── .env.example               # Template for required environment variables
+│   ├── Dockerfile                 # Multi-stage build → scratch final image
+│   └── go.mod / go.sum
+├── frontend/                      # React Native application
+└── Makefile                       # Docker build, push, run, lint, test targets
 ```
 
 ---
@@ -102,9 +104,10 @@ pandal-hopping-api/
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and fill in your values:
+Copy `.env.example` to `.env` inside the `backend` directory and fill in your values:
 
 ```bash
+cd backend
 cp .env.example .env
 ```
 
@@ -121,6 +124,8 @@ cp .env.example .env
 ### Run Locally (Go)
 
 ```bash
+cd backend
+
 # Install dependencies
 go mod download
 

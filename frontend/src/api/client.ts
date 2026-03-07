@@ -1,8 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { storage } from '../utils/storage';
 
-// export const BASE_URL = 'http://localhost:8080/api/v1';
-export const BASE_URL = 'https://api.bitmaskers.in/pandal-hopping/api/v1';
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
 export const api = axios.create({
   baseURL: BASE_URL,

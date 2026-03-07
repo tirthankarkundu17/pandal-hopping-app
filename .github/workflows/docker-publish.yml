@@ -2,9 +2,9 @@ name: Full-Stack CI/CD Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     types: [opened, synchronize, labeled]
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
   # ─── Continuous Deployment ────────────────────────────────────────────────
   publish-docker:
     name: Build & Push Multi-Arch Image
-    # Trigger on push to master, OR on PR if it has the 'build' label
+    # Trigger on push to main, OR on PR if it has the 'build' label
     # Must wait for backend validation to pass first
     needs: [validate-backend]
     if: >-

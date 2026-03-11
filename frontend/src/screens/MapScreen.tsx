@@ -10,7 +10,17 @@ import { Pandal } from '../api/pandals';
 export function MapScreen() {
     const [pandals, setPandals] = useState<Pandal[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null);
+    // old single selection state retained for reference
+    // const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null);
+
+    // ------------------------------------------------------------------
+    // LEGACY / COMMENTED METHODS
+    // The old handlers below are kept as comments for historical context
+    // and can be removed once the new multi-selection + waypoint logic
+    // has been fully validated.
+    // ------------------------------------------------------------------
+
+    const [selectedPandals, setSelectedPandals] = useState<string[]>([]);
     const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
     const [initialRegion, setInitialRegion] = useState<{ latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } | null>(null);
     const mapRef = React.useRef<MapView>(null);
@@ -86,6 +96,138 @@ export function MapScreen() {
         }
     }, []);
 
+    // helper to toggle selection of a pandal (replaces single selection logic)
+    const togglePandalSelection = useCallback((pandalId: string) => {
+        setSelectedPandals((prev) => {
+            if (prev.includes(pandalId)) {
+                return prev.filter((id) => id !== pandalId);
+            } else {
+                return [...prev, pandalId];
+            }
+        });
+    }, []);
+
+    // previous single/fallback openGoogleMaps logic: (commented out)
+    // the implementation above simply routed to the first available
+    // coordinate and did not support multiple waypoints. We preserve it
+    // here as a reference in case we need to rollback or compare later.
+    // const openGoogleMaps = useCallback(async () => {
+    //     try {
+    //         let latitude: number;
+    //         let longitude: number;
+    //
+    //         if (currentLocation) {
+    //             latitude = currentLocation.coords.latitude;
+    //             longitude = currentLocation.coords.longitude;
+    //         } else if (pandals.length > 0) {
+    //             const firstPandal = pandals[0];
+    //             const coords = firstPandal.location?.coordinates;
+    //             if (coords && coords.length === 2) {
+    //                 latitude = coords[1];
+    //                 longitude = coords[0];
+    //             } else {
+    //                 alert('No location available');
+    //                 return;
+    //             }
+    //         } else {
+    //             alert('Please wait for locations to load');
+    //             return;
+    //         }
+    //
+    //         const nativeUrl = `googlemaps://?daddr=${latitude},${longitude}&directionsmode=driving`;
+    //         const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    //         
+    //         const supported = await Linking.canOpenURL(nativeUrl);
+    //         if (supported) {
+    //             await Linking.openURL(nativeUrl);
+    //         } else {
+    //             await Linking.openURL(webUrl);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error opening Google Maps:', error);
+    //         alert('Unable to open Google Maps');
+    //     }
+    // }, [currentLocation, pandals]);
+
+    const openGoogleMaps = useCallback(async () => {
+        try {
+            let startLat: number;
+            let startLng: number;
+            const waypoints: string[] = [];
+            let destination = '';
+
+            // Set starting point
+            if (currentLocation) {
+                startLat = currentLocation.coords.latitude;
+                startLng = currentLocation.coords.longitude;
+            } else if (pandals.length > 0) {
+                const firstPandal = pandals[0];
+                const coords = firstPandal.location?.coordinates;
+                if (coords && coords.length === 2) {
+                    startLat = coords[1];
+                    startLng = coords[0];
+                } else {
+                    alert('No location available');
+                    return;
+                }
+            } else {
+                alert('Please wait for locations to load');
+                return;
+            }
+
+            // Build waypoints from selected pandals
+            if (selectedPandals.length > 0) {
+                selectedPandals.forEach((pandalId) => {
+                    const pandal = pandals.find((p) => p.id === pandalId);
+                    if (pandal && pandal.location?.coordinates) {
+                        const coords = pandal.location.coordinates;
+                        waypoints.push(`${coords[1]},${coords[0]}`);
+                    }
+                });
+
+                if (waypoints.length === 0) {
+                    alert('Selected locations have no valid coordinates');
+                    return;
+                }
+
+                destination = waypoints[waypoints.length - 1];
+                waypoints.pop(); // Remove last waypoint since it will be the destination
+            } else if (pandals.length > 0) {
+                // Fallback to first pandal if nothing is selected
+                const firstPandal = pandals[0];
+                const coords = firstPandal.location?.coordinates;
+                if (coords && coords.length === 2) {
+                    destination = `${coords[1]},${coords[0]}`;
+                }
+            }
+
+            if (!destination) {
+                alert('No destination available');
+                return;
+            }
+
+            // Build Google Maps URLs
+            let nativeUrl = `googlemaps://?saddr=${startLat},${startLng}&daddr=${destination}&directionsmode=driving`;
+            let webUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${destination}`;
+
+            // Add waypoints if available
+            if (waypoints.length > 0) {
+                nativeUrl += `&waypoints=${waypoints.join('|')}`;
+                webUrl += `&waypoints=${waypoints.join('|')}`;
+            }
+
+            const supported = await Linking.canOpenURL(nativeUrl);
+            if (supported) {
+                await Linking.openURL(nativeUrl);
+            } else {
+                await Linking.openURL(webUrl);
+            }
+        } catch (error) {
+            console.error('Error opening Google Maps:', error);
+            alert('Unable to open Google Maps');
+        }
+    }, [currentLocation, pandals, selectedPandals]);
+
     return (
         <View style={styles.container}>
             {initialRegion ? (
@@ -111,6 +253,7 @@ export function MapScreen() {
                     {pandals.map((p) => {
                         const coords = p.location?.coordinates;
                         if (!coords || coords.length !== 2) return null;
+                        const isSelected = selectedPandals.includes(p.id);
 
                         return (
                             <Marker
@@ -119,18 +262,25 @@ export function MapScreen() {
                                     latitude: coords[1], // GeoJSON is [lng, lat]
                                     longitude: coords[0]
                                 }}
-                                onPress={() => setSelectedPandal(p)}
+                                onPress={() => togglePandalSelection(p.id)}
                             >
-                                <View style={styles.pandalPin}>
+                                <View style={[styles.pandalPin, isSelected && styles.pandalPinSelected]}>
                                     <View style={styles.pandalIconContainer}>
                                         <MaterialCommunityIcons name="temple-hindu" size={18} color="#FFF" />
                                     </View>
                                 </View>
+                                {isSelected && (
+                                    <View style={styles.selectionBadge}>
+                                        <Text style={styles.selectionBadgeText}>
+                                            {selectedPandals.indexOf(p.id) + 1}
+                                        </Text>
+                                    </View>
+                                )}
                                 <Callout tooltip>
                                     <View style={styles.calloutContainer}>
                                         <Text style={styles.calloutTitle}>{p.name}</Text>
                                         <Text style={styles.calloutSubtitle}>{p.area}</Text>
-                                        <Text style={styles.calloutHint}>Tap below for details</Text>
+                                        <Text style={styles.calloutHint}>Tap to {isSelected ? 'deselect' : 'select'}</Text>
                                     </View>
                                 </Callout>
                             </Marker>
@@ -147,49 +297,34 @@ export function MapScreen() {
                 <Ionicons name="navigate" size={24} color={COLORS.primary} />
             </TouchableOpacity>
 
+            <TouchableOpacity
+                style={styles.googleMapsButton}
+                onPress={openGoogleMaps}
+                activeOpacity={0.8}
+            >
+                <Ionicons name="map" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+
             {loading && (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             )}
 
-            {/* Selected Pandal Card Popup */}
-            {selectedPandal && (
-                <View style={styles.carouselContainer}>
-                    <TouchableOpacity style={styles.card} activeOpacity={0.9}>
-                        {selectedPandal.images?.[0] ? (
-                            <Image source={{ uri: selectedPandal.images[0] }} style={styles.cardImage} />
-                        ) : (
-                            <View style={[styles.cardImage, styles.placeholderImage]}>
-                                <Ionicons name="image-outline" size={24} color={COLORS.textMuted} />
-                            </View>
-                        )}
-                        <View style={styles.cardInfo}>
-                            <Text style={styles.cardTitle} numberOfLines={1}>{selectedPandal.name}</Text>
-                            <Text style={styles.cardSubtitle} numberOfLines={1}>{selectedPandal.area}</Text>
-                            {selectedPandal.description ? (
-                                <Text style={styles.cardDescription} numberOfLines={2}>{selectedPandal.description}</Text>
-                            ) : null}
-                            <TouchableOpacity
-                                style={styles.directionBtn}
-                                onPress={() => {
-                                    const coords = selectedPandal.location?.coordinates;
-                                    if (coords && coords.length === 2) {
-                                        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`);
-                                    }
-                                }}
-                            >
-                                <Ionicons name="navigate" size={14} color="#FFF" />
-                                <Text style={styles.directionBtnText}>Get Direction</Text>
-                            </TouchableOpacity>
-                        </View>
+            {/* Selected Pandals Summary */}
+            {selectedPandals.length > 0 && (
+                <View style={styles.selectionSummaryContainer}>
+                    <View style={styles.selectionSummary}>
+                        <Text style={styles.selectionSummaryText}>
+                            {selectedPandals.length} pandal{selectedPandals.length > 1 ? 's' : ''} selected
+                        </Text>
                         <TouchableOpacity
-                            style={styles.closeBtn}
-                            onPress={() => setSelectedPandal(null)}
+                            style={styles.clearSelectionBtn}
+                            onPress={() => setSelectedPandals([])}
                         >
-                            <Ionicons name="close" size={20} color={COLORS.textPrimary} />
+                            <Text style={styles.clearSelectionBtnText}>Clear</Text>
                         </TouchableOpacity>
-                    </TouchableOpacity>
+                    </View>
                 </View>
             )}
         </View>
@@ -213,6 +348,21 @@ const styles = StyleSheet.create({
     myLocationButton: {
         position: 'absolute',
         bottom: 120,
+        right: SPACING.md,
+        backgroundColor: COLORS.bgCard,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...SHADOWS.card,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        zIndex: 10,
+    },
+    googleMapsButton: {
+        position: 'absolute',
+        bottom: 180,
         right: SPACING.md,
         backgroundColor: COLORS.bgCard,
         width: 50,
@@ -357,5 +507,67 @@ const styles = StyleSheet.create({
         backgroundColor: '#007AFF',
         borderWidth: 2,
         borderColor: '#fff',
+    },
+    pandalPinSelected: {
+        backgroundColor: COLORS.primary,
+        borderColor: '#FFD700',
+        borderWidth: 3,
+    },
+    selectionBadge: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        backgroundColor: '#FFD700',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#FFF',
+    },
+    selectionBadgeText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#000',
+    },
+    selectionSummaryContainer: {
+        position: 'absolute',
+        top: SPACING.xl,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 20,
+    },
+    selectionSummary: {
+        backgroundColor: COLORS.bgCard,
+        borderRadius: RADIUS.lg,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        ...SHADOWS.card,
+        minWidth: 250,
+    },
+    selectionSummaryText: {
+        fontSize: FONTS.sizes.sm,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+        flex: 1,
+    },
+    clearSelectionBtn: {
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.xs,
+        backgroundColor: COLORS.primary,
+        borderRadius: RADIUS.sm,
+        marginLeft: SPACING.sm,
+    },
+    clearSelectionBtnText: {
+        color: '#FFF',
+        fontSize: FONTS.sizes.xs,
+        fontWeight: 'bold',
     }
 });

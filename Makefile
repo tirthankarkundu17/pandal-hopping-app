@@ -65,6 +65,11 @@ ios: ## Run frontend on iOS simulator (macOS only)
 web: ## Run frontend in the browser
 	cd frontend && npm run web
 
+# Run both backend and frontend in parallel
+run:
+	@echo "Starting backend and frontend in parallel..."
+	$(MAKE) -j 2 run-be run-fe
+
 # ─── Docker & Multi-Arch Build (Backend) ──────────────────────────────────────
 
 setup-buildx: ## Create the multi-arch buildx builder (run once)

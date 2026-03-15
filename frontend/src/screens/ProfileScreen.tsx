@@ -5,17 +5,61 @@ import {
     StyleSheet,
     ScrollView,
     Alert,
+    Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
 import { COLORS, FONTS, RADIUS, SPACING } from '../theme';
+import * as Location from 'expo-location';
+import { userApi } from '../api/user';
 
 export const ProfileScreen = () => {
-    const { logout } = useAuth();
+    const { user, logout, refreshProfile } = useAuth();
+    const [isUpdatingLocation, setIsUpdatingLocation] = React.useState(false);
+
+    const showAlert = (title: string, message: string) => {
+        if (Platform.OS === 'web') {
+            window.alert(`${title}: ${message}`);
+        } else {
+            Alert.alert(title, message);
+        }
+    };
+
+    const handleUpdateLocation = async () => {
+        try {
+            setIsUpdatingLocation(true);
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                showAlert('Permission Denied', 'Location permission is required to save your base location.');
+                return;
+            }
+
+            const location = await Location.getCurrentPositionAsync({});
+            const { latitude, longitude } = location.coords;
+
+            await userApi.updateBaseLocation(latitude, longitude);
+            await refreshProfile();
+            
+            showAlert('Success', 'Your base location has been updated successfully!');
+        } catch (error: any) {
+            console.error('Update location error:', error);
+            showAlert('Error', 'Failed to update base location. Please try again.');
+        } finally {
+            setIsUpdatingLocation(false);
+        }
+    };
 
     const handleLogout = () => {
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm('Are you sure you want to sign out?');
+            if (confirmed) {
+                logout();
+            }
+            return;
+        }
+
         Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
             { text: 'Cancel', style: 'cancel' },
             {
@@ -60,6 +104,30 @@ export const ProfileScreen = () => {
                     label="Submit Pandals"
                     description="Know a great pandal? Submit it and let the world know!"
                 />
+
+                <View style={styles.divider} />
+
+                <Text style={styles.sectionTitle}>Personal Settings</Text>
+                <View style={styles.locationCard}>
+                    <View style={styles.locationInfo}>
+                        <Ionicons name="home-outline" size={20} color={COLORS.primary} />
+                        <View style={{ flex: 1, marginLeft: SPACING.sm }}>
+                            <Text style={styles.locationLabel}>Base Location</Text>
+                            <Text style={styles.locationValue}>
+                                {user?.baseLocation 
+                                    ? `${user.baseLocation.coordinates[1].toFixed(4)}, ${user.baseLocation.coordinates[0].toFixed(4)}`
+                                    : 'Not set'}
+                            </Text>
+                        </View>
+                        <Button
+                            title={isUpdatingLocation ? "..." : "Update"}
+                            onPress={handleUpdateLocation}
+                            variant="primary"
+                            size="sm"
+                            style={styles.updateLocBtn}
+                        />
+                    </View>
+                </View>
 
                 <View style={styles.divider} />
 
@@ -230,6 +298,32 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: COLORS.border,
         marginBottom: SPACING.sm,
+    },
+    locationCard: {
+        backgroundColor: COLORS.bgCard,
+        borderRadius: RADIUS.md,
+        padding: SPACING.md,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        marginBottom: SPACING.sm,
+    },
+    locationInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    locationLabel: {
+        fontSize: FONTS.sizes.sm,
+        fontWeight: '700',
+        color: COLORS.textPrimary,
+    },
+    locationValue: {
+        fontSize: FONTS.sizes.xs,
+        color: COLORS.textSecondary,
+        marginTop: 2,
+    },
+    updateLocBtn: {
+        width: 100,
+        height: 40,
     },
     logoutBtn: {
         marginTop: SPACING.md,

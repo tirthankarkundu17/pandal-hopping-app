@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"tirthankarkundu17/pandal-hopping-api/internal/models"
 
@@ -15,6 +16,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
 	FindByID(ctx context.Context, id primitive.ObjectID) (*models.User, error)
+	UpdateBaseLocation(ctx context.Context, id primitive.ObjectID, location *models.GeoJSONPoint) (*models.User, error)
 }
 
 type userRepository struct {
@@ -56,4 +58,19 @@ func (r *userRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) UpdateBaseLocation(ctx context.Context, id primitive.ObjectID, location *models.GeoJSONPoint) (*models.User, error) {
+	_, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{"$set": bson.M{
+			"baseLocation": location,
+			"updatedAt":    time.Now(),
+		}},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return r.FindByID(ctx, id)
 }

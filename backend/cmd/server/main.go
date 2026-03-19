@@ -67,6 +67,9 @@ func main() {
 	authService := services.NewAuthService(userRepo)
 	authHandler := handlers.NewAuthHandler(authService)
 
+	userService := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
+
 	routeRepo := repository.NewRouteRepository(routeCollection, pandalCollection)
 	routeService := services.NewRouteService(routeRepo)
 	routeHandler := handlers.NewRouteHandler(routeService)
@@ -96,6 +99,7 @@ func main() {
 	// Setup routes
 	routes.PandalRoute(apiGroup, pandalHandler)
 	routes.AuthRoute(apiGroup, authHandler)
+	routes.UserRoute(apiGroup, userHandler)
 	routes.RouteRoute(apiGroup, routeHandler)
 	routes.FoodRoute(apiGroup, foodStopHandler)
 	routes.LocationRoute(apiGroup, locationHandler)

@@ -10,16 +10,6 @@ import { Pandal } from '../api/pandals';
 export function MapScreen() {
     const [pandals, setPandals] = useState<Pandal[]>([]);
     const [loading, setLoading] = useState(true);
-    // old single selection state retained for reference
-    // const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null);
-
-    // ------------------------------------------------------------------
-    // LEGACY / COMMENTED METHODS
-    // The old handlers below are kept as comments for historical context
-    // and can be removed once the new multi-selection + waypoint logic
-    // has been fully validated.
-    // ------------------------------------------------------------------
-
     const [selectedPandals, setSelectedPandals] = useState<string[]>([]);
     const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
     const [initialRegion, setInitialRegion] = useState<{ latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } | null>(null);
@@ -106,48 +96,6 @@ export function MapScreen() {
             }
         });
     }, []);
-
-    // previous single/fallback openGoogleMaps logic: (commented out)
-    // the implementation above simply routed to the first available
-    // coordinate and did not support multiple waypoints. We preserve it
-    // here as a reference in case we need to rollback or compare later.
-    // const openGoogleMaps = useCallback(async () => {
-    //     try {
-    //         let latitude: number;
-    //         let longitude: number;
-    //
-    //         if (currentLocation) {
-    //             latitude = currentLocation.coords.latitude;
-    //             longitude = currentLocation.coords.longitude;
-    //         } else if (pandals.length > 0) {
-    //             const firstPandal = pandals[0];
-    //             const coords = firstPandal.location?.coordinates;
-    //             if (coords && coords.length === 2) {
-    //                 latitude = coords[1];
-    //                 longitude = coords[0];
-    //             } else {
-    //                 alert('No location available');
-    //                 return;
-    //             }
-    //         } else {
-    //             alert('Please wait for locations to load');
-    //             return;
-    //         }
-    //
-    //         const nativeUrl = `googlemaps://?daddr=${latitude},${longitude}&directionsmode=driving`;
-    //         const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-    //         
-    //         const supported = await Linking.canOpenURL(nativeUrl);
-    //         if (supported) {
-    //             await Linking.openURL(nativeUrl);
-    //         } else {
-    //             await Linking.openURL(webUrl);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error opening Google Maps:', error);
-    //         alert('Unable to open Google Maps');
-    //     }
-    // }, [currentLocation, pandals]);
 
     const openGoogleMaps = useCallback(async () => {
         try {
@@ -297,32 +245,37 @@ export function MapScreen() {
                 <Ionicons name="navigate" size={24} color={COLORS.primary} />
             </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.googleMapsButton}
-                onPress={openGoogleMaps}
-                activeOpacity={0.8}
-            >
-                <Ionicons name="map" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
-
             {loading && (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             )}
 
-            {/* Selected Pandals Summary */}
+            {/* Selected Pandals Summary + Google Maps button */}
             {selectedPandals.length > 0 && (
                 <View style={styles.selectionSummaryContainer}>
-                    <View style={styles.selectionSummary}>
-                        <Text style={styles.selectionSummaryText}>
-                            {selectedPandals.length} pandal{selectedPandals.length > 1 ? 's' : ''} selected
-                        </Text>
+                    <View style={styles.selectionSummaryRow}>
+                        <View style={styles.selectionSummary}>
+                            <Text style={styles.selectionSummaryText}>
+                                {selectedPandals.length} pandal{selectedPandals.length > 1 ? 's' : ''} selected
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.clearSelectionBtn}
+                                onPress={() => setSelectedPandals([])}
+                            >
+                                <Text style={styles.clearSelectionBtnText}>Clear</Text>
+                            </TouchableOpacity>
+                        </View>
+
                         <TouchableOpacity
-                            style={styles.clearSelectionBtn}
-                            onPress={() => setSelectedPandals([])}
+                            style={styles.googleMapsButton}
+                            onPress={openGoogleMaps}
+                            activeOpacity={0.8}
+                            accessibilityLabel="Open selected pandals in Google Maps"
+                            accessibilityHint="Opens directions for selected pandals in Google Maps"
+                            {...({ title: 'Open selected pandals in Google Maps' } as any)}
                         >
-                            <Text style={styles.clearSelectionBtnText}>Clear</Text>
+                            <Ionicons name="map" size={24} color={COLORS.primary} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -361,19 +314,18 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     googleMapsButton: {
-        position: 'absolute',
-        bottom: 180,
-        right: SPACING.md,
         backgroundColor: COLORS.bgCard,
         width: 50,
         height: 50,
         borderRadius: 25,
         alignItems: 'center',
         justifyContent: 'center',
+        cursor: 'pointer',
         ...SHADOWS.card,
         borderWidth: 1,
         borderColor: COLORS.border,
-        zIndex: 10,
+        marginLeft: SPACING.sm,
+        zIndex: 20,
     },
     pandalPin: {
         width: 38,
@@ -538,6 +490,11 @@ const styles = StyleSheet.create({
         right: 0,
         alignItems: 'center',
         zIndex: 20,
+    },
+    selectionSummaryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     selectionSummary: {
         backgroundColor: COLORS.bgCard,

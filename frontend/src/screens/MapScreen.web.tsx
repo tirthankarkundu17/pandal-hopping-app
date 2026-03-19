@@ -24,8 +24,6 @@ L.Icon.Default.mergeOptions({
 export function MapScreen() {
     const [pandals, setPandals] = useState<Pandal[]>([]);
     const [loading, setLoading] = useState(true);
-    // previously, we tracked a single selected pandal:
-    // const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null);
     const [selectedPandals, setSelectedPandals] = useState<string[]>([]);
     const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
     const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
@@ -96,38 +94,6 @@ export function MapScreen() {
             }
         });
     }, []);
-
-    // previous simplistic Google Maps launcher (single destination only)
-    // const openGoogleMaps = useCallback(async () => {
-    //     try {
-    //         let latitude: number;
-    //         let longitude: number;
-    //
-    //         if (currentLocation) {
-    //             latitude = currentLocation.coords.latitude;
-    //             longitude = currentLocation.coords.longitude;
-    //         } else if (pandals.length > 0) {
-    //             const firstPandal = pandals[0];
-    //             const coords = firstPandal.location?.coordinates;
-    //             if (coords && coords.length === 2) {
-    //                 latitude = coords[1];
-    //                 longitude = coords[0];
-    //             } else {
-    //                 alert('No location available');
-    //                 return;
-    //             }
-    //         } else {
-    //             alert('Please wait for locations to load');
-    //             return;
-    //         }
-    //
-    //         const webUrl = `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${latitude},${longitude}`;
-    //         await Linking.openURL(webUrl);
-    //     } catch (error) {
-    //         console.error('Error opening Google Maps:', error);
-    //         alert('Unable to open Google Maps');
-    //     }
-    // }, [currentLocation, pandals]);
 
     const openGoogleMaps = useCallback(async () => {
         try {
@@ -212,11 +178,6 @@ export function MapScreen() {
                         style={{ height: '100%', width: '100%', zIndex: 1 }}
                     >
                         <TileLayer
-                            // legacy HTML attribution string pulled from OpenStreetMap
-                        // kept here commented in case we ever need to switch to a
-                        // plain-text fallback.  The tag is required by the OSM
-                        // terms but we store it explicitly for clarity.
-                        // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         attribution='&copy; OpenStreetMap contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
@@ -279,33 +240,37 @@ export function MapScreen() {
                 <Ionicons name="navigate" size={24} color={COLORS.primary} />
             </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.googleMapsButton}
-                onPress={openGoogleMaps}
-                activeOpacity={0.8}
-            >
-                <Ionicons name="map" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
-
             {loading && (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             )}
 
-            {/* Selected Pandals Summary */}
+            {/* Selected Pandals Summary + Google Maps button */}
             {selectedPandals.length > 0 && (
                 <View style={styles.selectionSummaryContainer}>
-                    <View style={styles.selectionSummary}>
-                        <Text style={styles.selectionSummaryText}>
-                            {selectedPandals.length} pandal{selectedPandals.length > 1 ? 's' : ''} selected
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.clearSelectionBtn}
-                            onPress={() => setSelectedPandals([])}
+                    <View style={styles.selectionSummaryRow}>
+                        <View style={styles.selectionSummary}>
+                            <Text style={styles.selectionSummaryText}>
+                                {selectedPandals.length} pandal{selectedPandals.length > 1 ? 's' : ''} selected
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.clearSelectionBtn}
+                                onPress={() => setSelectedPandals([])}
+                            >
+                                <Text style={styles.clearSelectionBtnText}>Clear</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <button
+                            type="button"
+                            style={styles.googleMapsButton as any}
+                            onClick={openGoogleMaps}
+                            title="Open selected pandals in Google Maps"
+                            aria-label="Open selected pandals in Google Maps"
                         >
-                            <Text style={styles.clearSelectionBtnText}>Clear</Text>
-                        </TouchableOpacity>
+                            <Ionicons name="map" size={24} color={COLORS.primary} />
+                        </button>
                     </View>
                 </View>
             )}
@@ -411,18 +376,17 @@ const styles = StyleSheet.create({
         zIndex: 500, // Important on web to sit above leaflet map layer
     },
     googleMapsButton: {
-        position: 'absolute',
-        bottom: 180,
-        right: SPACING.md,
         backgroundColor: COLORS.bgCard,
         width: 50,
         height: 50,
         borderRadius: 25,
         alignItems: 'center',
         justifyContent: 'center',
+        cursor: 'pointer',
         ...SHADOWS.card,
         borderWidth: 1,
         borderColor: COLORS.border,
+        marginLeft: SPACING.sm,
         zIndex: 500,
     },
     selectionSummaryContainer: {
@@ -432,6 +396,11 @@ const styles = StyleSheet.create({
         right: 0,
         alignItems: 'center',
         zIndex: 20,
+    },
+    selectionSummaryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     selectionSummary: {
         backgroundColor: COLORS.bgCard,

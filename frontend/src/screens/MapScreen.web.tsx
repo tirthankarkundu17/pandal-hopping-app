@@ -24,7 +24,7 @@ L.Icon.Default.mergeOptions({
 export function MapScreen() {
     const [pandals, setPandals] = useState<Pandal[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null);
+    const [selectedPandals, setSelectedPandals] = useState<string[]>([]);
     const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
     const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
@@ -85,6 +85,88 @@ export function MapScreen() {
         }
     }, [mapInstance]);
 
+    const togglePandalSelection = useCallback((pandalId: string) => {
+        setSelectedPandals((prev) => {
+            if (prev.includes(pandalId)) {
+                return prev.filter((id) => id !== pandalId);
+            } else {
+                return [...prev, pandalId];
+            }
+        });
+    }, []);
+
+    const openGoogleMaps = useCallback(async () => {
+        try {
+            let startLat: number;
+            let startLng: number;
+            const waypoints: string[] = [];
+            let destination = '';
+
+            // Set starting point
+            if (currentLocation) {
+                startLat = currentLocation.coords.latitude;
+                startLng = currentLocation.coords.longitude;
+            } else if (pandals.length > 0) {
+                const firstPandal = pandals[0];
+                const coords = firstPandal.location?.coordinates;
+                if (coords && coords.length === 2) {
+                    startLat = coords[1];
+                    startLng = coords[0];
+                } else {
+                    alert('No location available');
+                    return;
+                }
+            } else {
+                alert('Please wait for locations to load');
+                return;
+            }
+
+            // Build waypoints from selected pandals
+            if (selectedPandals.length > 0) {
+                selectedPandals.forEach((pandalId) => {
+                    const pandal = pandals.find((p) => p.id === pandalId);
+                    if (pandal && pandal.location?.coordinates) {
+                        const coords = pandal.location.coordinates;
+                        waypoints.push(`${coords[1]},${coords[0]}`);
+                    }
+                });
+
+                if (waypoints.length === 0) {
+                    alert('Selected locations have no valid coordinates');
+                    return;
+                }
+
+                destination = waypoints[waypoints.length - 1];
+                waypoints.pop(); // Remove last waypoint since it will be the destination
+            } else if (pandals.length > 0) {
+                // Fallback to first pandal if nothing is selected
+                const firstPandal = pandals[0];
+                const coords = firstPandal.location?.coordinates;
+                if (coords && coords.length === 2) {
+                    destination = `${coords[1]},${coords[0]}`;
+                }
+            }
+
+            if (!destination) {
+                alert('No destination available');
+                return;
+            }
+
+            // Build Google Maps URL
+            let webUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${destination}`;
+
+            // Add waypoints if available
+            if (waypoints.length > 0) {
+                webUrl += `&waypoints=${waypoints.join('|')}`;
+            }
+
+            await Linking.openURL(webUrl);
+        } catch (error) {
+            console.error('Error opening Google Maps:', error);
+            alert('Unable to open Google Maps');
+        }
+    }, [currentLocation, pandals, selectedPandals]);
+
     return (
         <View style={styles.container}>
             <View style={StyleSheet.absoluteFill}>
@@ -96,7 +178,7 @@ export function MapScreen() {
                         style={{ height: '100%', width: '100%', zIndex: 1 }}
                     >
                         <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        attribution='&copy; OpenStreetMap contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
 
@@ -117,25 +199,30 @@ export function MapScreen() {
                         {pandals.map((p) => {
                             const coords = p.location?.coordinates;
                             if (!coords || coords.length !== 2) return null;
+                            const isSelected = selectedPandals.includes(p.id);
+                            const selectionIndex = selectedPandals.indexOf(p.id) + 1;
 
                             return (
                                 <LeafletMarker
                                     key={p.id}
-                                    position={[coords[1], coords[0]]} // GeoJSON is [lng, lat], Leaflet is [lat, lng]
+                                    position={[coords[1], coords[0]]}
                                     icon={L.divIcon({
-                                        className: 'custom-pandal-marker',
-                                        html: `<div style="background-color: ${COLORS.primary}; width: 38px; height: 38px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 2px 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center; margin-left: 2px; margin-top: 2px;"><svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 24 24"><path d="M20 11v2h-2L15 3V1h-2v2h-2V1H9v2H7L3.8 13H2v2h2v8h5v-5h6v5h5v-8h2zm-10.5 0L12 6.47 14.5 11h-5z" fill="white"/></svg></div></div>`,
+                                        className: `custom-pandal-marker ${isSelected ? 'selected' : ''}`,
+                                        html: `<div style="background-color: ${isSelected ? '#FFD700' : COLORS.primary}; width: 38px; height: 38px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: ${isSelected ? '3px' : '2px'} solid white; box-shadow: 2px 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center; margin-left: 2px; margin-top: 2px;"><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"20\" width=\"20\" viewBox=\"0 0 24 24\"><path d=\"M20 11v2h-2L15 3V1h-2v2h-2V1H9v2H7L3.8 13H2v2h2v8h5v-5h6v5h5v-8h2zm-10.5 0L12 6.47 14.5 11h-5z\" fill=\"white\"/></svg></div></div>${isSelected ? `<div style=\"position: absolute; top: -8px; right: -8px; background-color: #FFD700; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; font-size: 12px; color: black;\">${selectionIndex}</div>` : ''}`,
                                         iconSize: [38, 38],
                                         iconAnchor: [19, 38]
                                     })}
                                     eventHandlers={{
-                                        click: () => setSelectedPandal(p),
+                                        click: () => togglePandalSelection(p.id),
                                     }}
                                 >
                                     <Popup>
                                         <View>
                                             <Text style={{ fontWeight: 'bold', fontSize: 14 }}>{p.name}</Text>
                                             <Text style={{ fontSize: 12, color: '#666' }}>{p.area}</Text>
+                                            <Text style={{ fontSize: 11, color: COLORS.primary, marginTop: 4 }}>
+                                                Tap to {isSelected ? 'deselect' : 'select'}
+                                            </Text>
                                         </View>
                                     </Popup>
                                 </LeafletMarker>
@@ -159,43 +246,32 @@ export function MapScreen() {
                 </View>
             )}
 
-            {/* Selected Pandal Card Popup (overlaying map) */}
-            {selectedPandal && (
-                <View style={[styles.carouselContainer, { zIndex: 1000 }]} pointerEvents="box-none">
-                    <TouchableOpacity style={styles.card} activeOpacity={0.9}>
-                        {selectedPandal.images?.[0] ? (
-                            <Image source={{ uri: selectedPandal.images[0] }} style={styles.cardImage} />
-                        ) : (
-                            <View style={[styles.cardImage, styles.placeholderImage]}>
-                                <Ionicons name="image-outline" size={24} color={COLORS.textMuted} />
-                            </View>
-                        )}
-                        <View style={styles.cardInfo}>
-                            <Text style={styles.cardTitle} numberOfLines={1}>{selectedPandal.name}</Text>
-                            <Text style={styles.cardSubtitle} numberOfLines={1}>{selectedPandal.area}</Text>
-                            {selectedPandal.description ? (
-                                <Text style={styles.cardDescription} numberOfLines={2}>{selectedPandal.description}</Text>
-                            ) : null}
+            {/* Selected Pandals Summary + Google Maps button */}
+            {selectedPandals.length > 0 && (
+                <View style={styles.selectionSummaryContainer}>
+                    <View style={styles.selectionSummaryRow}>
+                        <View style={styles.selectionSummary}>
+                            <Text style={styles.selectionSummaryText}>
+                                {selectedPandals.length} pandal{selectedPandals.length > 1 ? 's' : ''} selected
+                            </Text>
                             <TouchableOpacity
-                                style={styles.directionBtn}
-                                onPress={() => {
-                                    const coords = selectedPandal.location?.coordinates;
-                                    if (coords && coords.length === 2) {
-                                        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`);
-                                    }
-                                }}
+                                style={styles.clearSelectionBtn}
+                                onPress={() => setSelectedPandals([])}
                             >
-                                <Ionicons name="navigate" size={14} color="#FFF" />
-                                <Text style={styles.directionBtnText}>Get Direction</Text>
+                                <Text style={styles.clearSelectionBtnText}>Clear</Text>
                             </TouchableOpacity>
                         </View>
-                        <TouchableOpacity
-                            style={styles.closeBtn}
-                            onPress={() => setSelectedPandal(null)}
+
+                        <button
+                            type="button"
+                            style={styles.googleMapsButton as any}
+                            onClick={openGoogleMaps}
+                            title="Open selected pandals in Google Maps"
+                            aria-label="Open selected pandals in Google Maps"
                         >
-                            <Ionicons name="close" size={20} color={COLORS.textPrimary} />
-                        </TouchableOpacity>
-                    </TouchableOpacity>
+                            <Ionicons name="map" size={24} color={COLORS.primary} />
+                        </button>
+                    </View>
                 </View>
             )}
         </View>
@@ -298,5 +374,63 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: COLORS.border,
         zIndex: 500, // Important on web to sit above leaflet map layer
+    },
+    googleMapsButton: {
+        backgroundColor: COLORS.bgCard,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        ...SHADOWS.card,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        marginLeft: SPACING.sm,
+        zIndex: 500,
+    },
+    selectionSummaryContainer: {
+        position: 'absolute',
+        top: SPACING.xl,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 20,
+    },
+    selectionSummaryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    selectionSummary: {
+        backgroundColor: COLORS.bgCard,
+        borderRadius: RADIUS.lg,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        ...SHADOWS.card,
+        minWidth: 250,
+    },
+    selectionSummaryText: {
+        fontSize: FONTS.sizes.sm,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+        flex: 1,
+    },
+    clearSelectionBtn: {
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.xs,
+        backgroundColor: COLORS.primary,
+        borderRadius: RADIUS.sm,
+        marginLeft: SPACING.sm,
+    },
+    clearSelectionBtnText: {
+        color: '#FFF',
+        fontSize: FONTS.sizes.xs,
+        fontWeight: 'bold',
     }
 });
